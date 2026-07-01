@@ -1,0 +1,530 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: #a855f7;
+  --primary-foreground: #ffffff;
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: #e2a9f1;
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: #a855f7;
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  /* Ghost neutral-dark surfaces */
+  --background: #101010;
+  --foreground: #ffffff;
+  --card: #161616;
+  --card-foreground: #ffffff;
+  --popover: #1a1a1a;
+  --popover-foreground: #ffffff;
+  /* Lavender primary (matches Ghost's "Launch App" CTA), dark text on it */
+  --primary: #e2a9f1;
+  --primary-foreground: #101010;
+  --secondary: #1f1f1f;
+  --secondary-foreground: #ffffff;
+  --muted: #1f1f1f;
+  --muted-foreground: #a1a1aa;
+  /* Vivid purple accent (glows, rings) */
+  --accent: #a855f7;
+  --accent-foreground: #ffffff;
+  --destructive: oklch(0.7 0.19 22);
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: #a855f7;
+  --sidebar: #161616;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: #1f1f1f;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: var(--ring);
+}
+
+@theme inline {
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ghost-purple: #a855f7;
+  --color-ghost-purple-light: #e2a9f1;
+  --color-ghost-purple-dark: #7c3aed;
+  --color-ghost-accent: #e2a9f1;
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply text-foreground;
+    background-color: var(--background);
+    /* Ghost gradient-hero ambient glow — purple + indigo + lavender radials */
+    background-image:
+      radial-gradient(ellipse 80% 60% at 15% 55%, rgba(168, 85, 247, 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 70% 50% at 85% 45%, rgba(99, 102, 241, 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 50% 10%, rgba(226, 169, 241, 0.04) 0%, transparent 50%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Premium text selection + thin scrollbars everywhere */
+  ::selection {
+    background: rgba(168, 85, 247, 0.3);
+    color: var(--foreground);
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.18);
+  }
+}
+
+/* Glass helpers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.glow-bg {
+  background: radial-gradient(circle at 50% -20%, rgba(168, 85, 247, 0.1) 0%, rgba(16, 16, 16, 0) 60%);
+}
+
+/* Glass card — Ghost dark frosted panel */
+.glass-card {
+  background: rgba(26, 26, 26, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    0 8px 32px -8px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Premium utilities ──────────────────────────────────────────────────── */
+
+/* Gradient display text (white → lavender → purple) for hero headings */
+.text-gradient {
+  background: linear-gradient(100deg, #ffffff 0%, #e2a9f1 45%, #a855f7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Subtle hairline gradient border for premium cards */
+.premium-card {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 1rem;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
+    0 30px 60px -32px rgba(0, 0, 0, 0.8);
+  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+.premium-card:hover {
+  border-color: rgba(168, 85, 247, 0.3);
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.08) inset,
+    0 36px 70px -30px rgba(0, 0, 0, 0.85),
+    0 0 0 1px rgba(168, 85, 247, 0.08);
+}
+
+/* Premium primary button: lavender with depth + purple glow on hover */
+.btn-glow {
+  box-shadow: 0 8px 24px -8px rgba(168, 85, 247, 0.5);
+  transition: box-shadow 0.25s ease, transform 0.12s ease, filter 0.25s ease;
+}
+.btn-glow:hover {
+  box-shadow: 0 10px 30px -6px rgba(168, 85, 247, 0.65);
+  filter: brightness(1.05);
+}
+.btn-glow:active {
+  transform: translateY(1px);
+}
+
+/* Soft purple halo behind hero elements */
+.halo {
+  position: relative;
+}
+.halo::before {
+  content: "";
+  position: absolute;
+  inset: -40% -10% auto -10%;
+  height: 60%;
+  background: radial-gradient(closest-side, rgba(168, 85, 247, 0.18), transparent 70%);
+  filter: blur(40px);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Ghost CTA card gradient */
+.gradient-card-dark {
+  background: linear-gradient(135deg, #1a1030 0%, #0f0f0f 60%, #12121a 100%);
+}
+
+/* Ghost hero gradient (for explicit hero blocks) */
+.gradient-hero {
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 55%, rgba(168, 85, 247, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 85% 45%, rgba(99, 102, 241, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 10%, rgba(226, 169, 241, 0.04) 0%, transparent 50%),
+    #101010;
+}
+
+/* Ghost feature card inner glow */
+.feature-card {
+  position: relative;
+  overflow: hidden;
+}
+.feature-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(168, 85, 247, 0.05) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* Ghost smooth hover lift */
+.hover-lift {
+  transition: transform 0.25s cubic-bezier(0.33, 1, 0.68, 1), box-shadow 0.25s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.4);
+}
+
+.step-line {
+  position: absolute;
+  left: 1.5rem;
+  top: 2rem;
+  bottom: -2rem;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--accent) 0%, rgba(168, 85, 247, 0.1) 100%);
+  z-index: 0;
+}
+
+@media (min-width: 768px) {
+  .step-line {
+    left: 2.5rem;
+  }
+}
+
+.step-node {
+  position: relative;
+  z-index: 10;
+}
+
+.terminal-grid {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: linear-gradient(rgba(168, 85, 247, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 85, 247, 0.025) 1px, transparent 1px);
+  background-size: 100px 100px;
+  z-index: -1;
+}
+
+.scanline {
+  width: 100%;
+  height: 2px;
+  background: rgba(168, 85, 247, 0.04);
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.neon-glow {
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+  text-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
+}
+
+.glass-sidebar {
+  background: rgba(22, 22, 22, 0.55);
+  backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.terminal-block {
+  background: #0d0d0d;
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.25);
+  border-radius: 10px;
+}
+
+.grid-bg {
+  background-image: linear-gradient(rgba(168, 85, 247, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 85, 247, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+.core-container {
+  perspective: 2000px;
+}
+
+.orb-wrapper {
+  position: relative;
+  transform-style: preserve-3d;
+  animation: rotateOrb 30s linear infinite;
+}
+
+/* NOTE: removed dead ".ring / .ring-1…4" orbital-graphic classes. They were
+   unused in any component AND their names shadowed Tailwind's `ring`, `ring-1`,
+   `ring-2`, `ring-4` utilities — so any `ring-1`/`ring-2` (e.g. a focus or
+   selection ring) inherited width:400px + transform:rotateX(75deg) and collapsed.
+   Use the `ring`/`ring-*` Tailwind utilities or a `shadow-[...]` glow instead. */
+
+.core-data-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, #a855f7 0%, rgba(168, 85, 247, 0) 70%);
+  border-radius: 50%;
+  filter: blur(20px);
+  animation: pulse 4s ease-in-out infinite;
+}
+
+@keyframes rotateOrb {
+  from {
+    transform: rotateY(0deg) rotateZ(0deg);
+  }
+
+  to {
+    transform: rotateY(360deg) rotateZ(360deg);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.4);
+    opacity: 0.9;
+  }
+}
+
+.circular-text {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  animation: rotateCounter 60s linear infinite;
+}
+
+@keyframes rotateCounter {
+  from {
+    transform: rotate(360deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.text-ring {
+  font-family: 'monospace';
+  font-weight: 900;
+  text-transform: uppercase;
+  fill: rgba(255, 255, 255, 0.05);
+  font-size: 42px;
+  letter-spacing: 12px;
+}
+
+
+.energy-ring {
+  border: 4px solid transparent;
+  border-top-color: #a855f7;
+  border-bottom-color: #a855f7;
+  border-radius: 50%;
+  position: absolute;
+  animation: ringPulse 4s ease-in-out infinite alternate;
+}
+
+@keyframes ringPulse {
+  0% {
+    transform: scale(0.8) rotate(0deg);
+    opacity: 0.2;
+  }
+
+  100% {
+    transform: scale(1.2) rotate(180deg);
+    opacity: 0.8;
+  }
+}
+
+.core-glow {
+  background: radial-gradient(circle, #a855f7 0%, transparent 70%);
+  filter: blur(40px);
+}
+
+/* Marquee (Ghost token banner) */
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.marquee-content {
+  display: inline-block;
+  animation: marquee 30s linear infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 45s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Mesh Wallet Overrides — Dark text on lavender */
+.mesh-wallet-wrapper .mesh-button,
+.landing-wallet-wrapper .mesh-button {
+  background-color: var(--primary) !important;
+  color: #101010 !important;
+  border-radius: 9999px !important;
+  font-family: inherit !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  font-size: 10px !important;
+  border: none !important;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.35) !important;
+}
+
+.mesh-wallet-wrapper .mesh-button *,
+.landing-wallet-wrapper .mesh-button * {
+  color: #101010 !important;
+}
+
+.mesh-wallet-wrapper .mesh-dropdown {
+  background-color: #161616 !important;
+  border: 1px solid rgba(168, 85, 247, 0.2) !important;
+  backdrop-filter: blur(16px) !important;
+  border-radius: 12px !important;
+}
+
+/* Active Nav Header Fix */
+header nav a.bg-primary {
+  color: #101010 !important;
+}
