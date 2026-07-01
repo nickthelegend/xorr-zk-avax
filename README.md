@@ -134,6 +134,11 @@ Notes & docs: the `avalanche-privacy-skills` collection
 **Live on Fuji** (real Snowtrace txs):
 - Deposit + pay to a different wallet — [mint→Alice](https://testnet.snowtrace.io/tx/0xa3a3b767a05baa3bc68d969709801ecf5150f89e52eca60caa400ed1d60874d8), [Alice→Bob confidential](https://testnet.snowtrace.io/tx/0x5de968517cb57525b4839b68c91cd4052e9c89a824f752b05507b84d1e615e5c) (`scripts/live-mint-pay.ts`)
 - AMM swap 100 USDC → 98.71 XAV — [tx](https://testnet.snowtrace.io/tx/0x4853f36c1c227d252cbd3c668ceb396ab8d2a02b963623c0770f95af25ba63e8)
+- Bridge in (Fuji escrow) — [lock 40 USDC](https://testnet.snowtrace.io/tx/0x0b120dbb80498594061bf0c2d62e4e3ff15c6db9370e707deae76b60677e9d2f) → [relayer minted 40 xUSD](https://testnet.snowtrace.io/tx/0xfa7aad528114458db437aa98c9bb7de5a2ec975487fd059837143cfaffc374aa) (`scripts/live-bridge.ts`)
+
+**Genuine cross-chain — Ethereum Sepolia → Avalanche Fuji** (`scripts/live-xchain-bridge.ts`):
+- [lock 25 USDC on **Sepolia**](https://sepolia.etherscan.io/tx/0xa4a10f825e75ed0e541eab968fc6795cec3ae5e9f03b8d37ee9e4eac4270e8cc) → relayer → [mint 25 xUSD on **Fuji**](https://testnet.snowtrace.io/tx/0x3a14dcd4d020e82fa539dce995bda6739119c604a64ca2757431d77e71d33011) → recipient decrypts 25.00 xUSD. Source escrow on Sepolia: `0x456F03102D45305121d695FAC0fC664a98b257a5`.
+- Run it yourself: `deploy-sepolia-bridge.ts --network sepolia`, then the watcher `relayer-xchain.ts --network fuji`, then lock on Sepolia.
 
 **DeFi contracts** (`contracts/xorr/`, deployed via `scripts/deploy-xorr-defi.ts`):
 - `XorrBridge.sol` — source-side escrow (lock-and-mint / burn-and-release, nullifier-guarded)
