@@ -38,6 +38,14 @@ const config: HardhatUserConfig = {
       chainId: 43113,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
+    // Ethereum Sepolia — the SOURCE chain for the cross-chain bridge demo.
+    sepolia: {
+      url:
+        process.env.SEPOLIA_RPC_URL ||
+        "https://ethereum-sepolia-rpc.publicnode.com",
+      chainId: 11155111,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    },
   },
   gasReporter: {
     enabled: !!process.env.REPORT_GAS,
