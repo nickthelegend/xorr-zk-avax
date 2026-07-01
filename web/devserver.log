@@ -1,0 +1,175 @@
+
+> xorr-eErc-avax@0.1.0 dev
+> next dev
+
+ ⚠ Port 3000 is in use, trying 3001 instead.
+   ▲ Next.js 15.2.8
+   - Local:        http://localhost:3001
+   - Network:      http://192.168.1.13:3001
+
+ ✓ Starting...
+ ✓ Ready in 1860ms
+ ○ Compiling / ...
+ ⚠ ./node_modules/web-worker/cjs/node.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/web-worker/cjs/node.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/threadman.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/engine.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/bn128.js
+./node_modules/snarkjs/node_modules/ffjavascript/main.js
+./node_modules/snarkjs/src/curves.js
+./node_modules/snarkjs/main.js
+./node_modules/@avalabs/ac-eerc-sdk/dist/index.js
+./components/stellar-wallet-provider.tsx
+./app/page.tsx
+ GET / 200 in 22209ms
+ GET / 200 in 31ms
+ GET / 200 in 28ms
+ ⚠ ./node_modules/web-worker/cjs/node.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/web-worker/cjs/node.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/threadman.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/engine.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/bn128.js
+./node_modules/snarkjs/node_modules/ffjavascript/main.js
+./node_modules/snarkjs/src/curves.js
+./node_modules/snarkjs/main.js
+./node_modules/@avalabs/ac-eerc-sdk/dist/index.js
+./components/stellar-wallet-provider.tsx
+./app/page.tsx
+ ⚠ ./node_modules/web-worker/cjs/node.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/web-worker/cjs/node.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/threadman.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/engine.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/bn128.js
+./node_modules/snarkjs/node_modules/ffjavascript/main.js
+./node_modules/snarkjs/src/curves.js
+./node_modules/snarkjs/main.js
+./node_modules/@avalabs/ac-eerc-sdk/dist/index.js
+./components/stellar-wallet-provider.tsx
+./components/providers.tsx
+ GET /compliance 200 in 2635ms
+ ⚠ ./node_modules/web-worker/cjs/node.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/web-worker/cjs/node.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/threadman.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/engine.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/bn128.js
+./node_modules/snarkjs/node_modules/ffjavascript/main.js
+./node_modules/snarkjs/src/curves.js
+./node_modules/snarkjs/main.js
+./node_modules/@avalabs/ac-eerc-sdk/dist/index.js
+./components/stellar-wallet-provider.tsx
+./components/providers.tsx
+ ⚠ ./node_modules/web-worker/cjs/node.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/web-worker/cjs/node.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/threadman.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/engine.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/bn128.js
+./node_modules/snarkjs/node_modules/ffjavascript/main.js
+./node_modules/snarkjs/src/curves.js
+./node_modules/snarkjs/main.js
+./node_modules/@avalabs/ac-eerc-sdk/dist/index.js
+./components/stellar-wallet-provider.tsx
+./components/providers.tsx
+ GET /withdraw 200 in 1242ms
+ ⚠ ./node_modules/web-worker/cjs/node.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/web-worker/cjs/node.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/threadman.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/engine.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/bn128.js
+./node_modules/snarkjs/node_modules/ffjavascript/main.js
+./node_modules/snarkjs/src/curves.js
+./node_modules/snarkjs/main.js
+./node_modules/@avalabs/ac-eerc-sdk/dist/index.js
+./components/stellar-wallet-provider.tsx
+./components/providers.tsx
+ ⚠ ./node_modules/web-worker/cjs/node.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/web-worker/cjs/node.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/threadman.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/engine.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/bn128.js
+./node_modules/snarkjs/node_modules/ffjavascript/main.js
+./node_modules/snarkjs/src/curves.js
+./node_modules/snarkjs/main.js
+./node_modules/@avalabs/ac-eerc-sdk/dist/index.js
+./components/stellar-wallet-provider.tsx
+./components/providers.tsx
+ GET /faucet 200 in 1856ms
+ ⚠ ./node_modules/web-worker/cjs/node.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/web-worker/cjs/node.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/threadman.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/engine.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/bn128.js
+./node_modules/snarkjs/node_modules/ffjavascript/main.js
+./node_modules/snarkjs/src/curves.js
+./node_modules/snarkjs/main.js
+./node_modules/@avalabs/ac-eerc-sdk/dist/index.js
+./components/stellar-wallet-provider.tsx
+./components/providers.tsx
+ ⚠ ./node_modules/web-worker/cjs/node.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/web-worker/cjs/node.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/threadman.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/engine.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/bn128.js
+./node_modules/snarkjs/node_modules/ffjavascript/main.js
+./node_modules/snarkjs/src/curves.js
+./node_modules/snarkjs/main.js
+./node_modules/@avalabs/ac-eerc-sdk/dist/index.js
+./components/stellar-wallet-provider.tsx
+./components/providers.tsx
+ GET /profile 200 in 1450ms
+ ⚠ ./node_modules/web-worker/cjs/node.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/web-worker/cjs/node.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/threadman.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/engine.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/bn128.js
+./node_modules/snarkjs/node_modules/ffjavascript/main.js
+./node_modules/snarkjs/src/curves.js
+./node_modules/snarkjs/main.js
+./node_modules/@avalabs/ac-eerc-sdk/dist/index.js
+./components/stellar-wallet-provider.tsx
+./components/providers.tsx
+ ⚠ ./node_modules/web-worker/cjs/node.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/web-worker/cjs/node.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/threadman.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/engine.js
+./node_modules/snarkjs/node_modules/ffjavascript/src/bn128.js
+./node_modules/snarkjs/node_modules/ffjavascript/main.js
+./node_modules/snarkjs/src/curves.js
+./node_modules/snarkjs/main.js
+./node_modules/@avalabs/ac-eerc-sdk/dist/index.js
+./components/stellar-wallet-provider.tsx
+./components/providers.tsx
+ GET /solvency 200 in 1566ms
+[?25h

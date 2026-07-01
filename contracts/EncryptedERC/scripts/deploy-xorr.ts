@@ -28,15 +28,22 @@ const main = async () => {
 		);
 	}
 
-	// 1) Verifiers — isProd=true => production trusted-setup verifiers (Fuji/mainnet)
-	console.log("Deploying verifiers (production trusted setup)…");
+	// 1) Verifiers. IMPORTANT: these must match the circuit artifacts the app
+	//    hosts. We build circuits locally with `zkit make` and serve those (dev)
+	//    zkeys from web/public/circuits, so we deploy the matching DEV verifiers.
+	//    Set PROD_VERIFIERS=true only if you host AvaCloud's official production
+	//    trusted-setup artifacts instead.
+	const useProd = process.env.PROD_VERIFIERS === "true";
+	console.log(
+		`Deploying verifiers (${useProd ? "production" : "dev — matches locally-built circuits"})…`,
+	);
 	const {
 		registrationVerifier,
 		mintVerifier,
 		withdrawVerifier,
 		transferVerifier,
 		burnVerifier,
-	} = await deployVerifiers(deployer, true);
+	} = await deployVerifiers(deployer, useProd);
 
 	// 2) BabyJubJub library
 	console.log("Deploying BabyJubJub library…");

@@ -7,54 +7,18 @@ import { useWallet } from "@/components/stellar-wallet-provider";
 import { SegmentedControl } from "@/components/app/segmented-tabs";
 import { PayReceive } from "@/components/flows/pay-receive";
 import { DepositForm } from "@/components/flows/deposit-form";
-import { ComingSoon } from "@/components/flows/coming-soon";
+import { AmmSwapForm } from "@/components/flows/amm-swap-form";
+import { BridgeLockForm } from "@/components/flows/bridge-lock-form";
 import { ASSET_SYMBOL } from "@/lib/config";
 
 const TABS = ["Deposit", "Pay", "Swap", "Bridge"] as const;
 type Tab = (typeof TABS)[number];
 
-function SwapSoon() {
-  return (
-    <ComingSoon
-      title="Confidential swaps"
-      points={[
-        "Spend from your encrypted xUSD balance into an AMM with no on-chain link to your trade.",
-        "Routes a private eERC transfer through a constant-product pool.",
-      ]}
-      note={
-        <>
-          Ported from the XORR Stellar build&apos;s <code>private_swap</code>. On
-          Avalanche this composes an eERC confidential transfer with a DEX venue —
-          wiring in progress.
-        </>
-      }
-    />
-  );
-}
-
-function BridgeSoon() {
-  return (
-    <ComingSoon
-      title="Bridge into private xUSD"
-      points={[
-        "Lock USDC on another chain, mint confidential xUSD on Fuji with a zk proof.",
-        "No on-chain link between the deposit and the encrypted claim.",
-      ]}
-      note={
-        <>
-          The Stellar build bridged ETH→Stellar into shielded notes; the Avalanche
-          port maps this onto eERC converter-mode deposits.
-        </>
-      }
-    />
-  );
-}
-
 const FORMS: Record<Tab, React.ComponentType> = {
   Deposit: DepositForm,
   Pay: PayReceive,
-  Swap: SwapSoon,
-  Bridge: BridgeSoon,
+  Swap: AmmSwapForm,
+  Bridge: BridgeLockForm,
 };
 
 const META: Record<Tab, { title: string; desc: string }> = {
@@ -68,11 +32,11 @@ const META: Record<Tab, { title: string; desc: string }> = {
   },
   Swap: {
     title: "Swap",
-    desc: "Swap from your encrypted balance with no on-chain link to your trade.",
+    desc: "Swap USDC ↔ XAV on the XorrAMM (0.3% fee). A confidential swap burns xUSD on the eERC and routes the output to a fresh address — no link to your trade.",
   },
   Bridge: {
     title: "Bridge",
-    desc: "Bridge external USDC into private xUSD on Avalanche Fuji.",
+    desc: "Lock USDC on the source escrow to mint confidential xUSD on Fuji. A relayer completes the mint — no on-chain link between the public lock and the encrypted balance.",
   },
 };
 

@@ -119,10 +119,36 @@ Notes & docs: the `avalanche-privacy-skills` collection
 
 ---
 
+## Tested & live on Fuji
+
+**Contract test suite** (`cd contracts/EncryptedERC && npx hardhat test test/xorr-*.ts`) — real zk proofs, local network:
+
+| Test | Proves |
+|---|---|
+| `test/xorr-flow.ts` | mint 100 xUSD → Alice, Alice privately pays Bob 30, Bob withdraws (burn) 10 — balances decrypt correctly |
+| `test/xorr-bridge.ts` | lock 50 USDC → relayer mints 50 private xUSD; burn 20 xUSD → relayer releases 20 USDC; replay-guarded |
+| `test/xorr-swap.ts` | public AMM swap (50 USDC → XAV) **and** confidential swap (burn xUSD → relayer swaps → output to a fresh address) |
+
+→ **4 passing.**
+
+**Live on Fuji** (real Snowtrace txs):
+- Deposit + pay to a different wallet — [mint→Alice](https://testnet.snowtrace.io/tx/0xa3a3b767a05baa3bc68d969709801ecf5150f89e52eca60caa400ed1d60874d8), [Alice→Bob confidential](https://testnet.snowtrace.io/tx/0x5de968517cb57525b4839b68c91cd4052e9c89a824f752b05507b84d1e615e5c) (`scripts/live-mint-pay.ts`)
+- AMM swap 100 USDC → 98.71 XAV — [tx](https://testnet.snowtrace.io/tx/0x4853f36c1c227d252cbd3c668ceb396ab8d2a02b963623c0770f95af25ba63e8)
+
+**DeFi contracts** (`contracts/xorr/`, deployed via `scripts/deploy-xorr-defi.ts`):
+- `XorrBridge.sol` — source-side escrow (lock-and-mint / burn-and-release, nullifier-guarded)
+- `XorrAMM.sol` — constant-product AMM (x·y=k, 0.3% fee)
+- **Bridge relayer**: `npx hardhat run scripts/relayer.ts --network fuji` watches `Locked` events and privateMints xUSD to recipients.
+
+The **Bridge** and **Swap** tabs in the web app are wired to these live contracts (mint test tokens, quote, approve, swap, lock) via wagmi.
+
 ## Notes
 
 - **Standalone mode**: mint is owner-gated. The deploying wallet can self-mint test
   xUSD; otherwise the issuer mints to a registered address.
+- **Verifiers must match the hosted circuits.** We build circuits locally (`zkit`)
+  and host those (dev) zkeys, so the deploy uses matching dev verifiers. Set
+  `PROD_VERIFIERS=true` only if you host AvaCloud's official prod artifacts.
 - **Roadmap pages** (Swap, Bridge, Off-ramp, Solvency, Markets, Claim) keep the
   premium UI and are clearly marked — they carry over from the Stellar build and
   map onto eERC (confidential transfer + venue, converter-mode deposits, threshold
