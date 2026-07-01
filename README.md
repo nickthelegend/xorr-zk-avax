@@ -36,11 +36,46 @@ Built for the **Avalanche "Privacy" Speedrun** (July 2026) — eERC track.
 | Withdraw / unshield | **Burn** confidential xUSD (`privateBurn`) |
 | Selective disclosure receipt | **Auditor** decrypts history (`auditorDecrypt`) |
 | BN254 Groth16 on Soroban | eERC verifiers (BabyJubJub · ElGamal · Poseidon · Groth16) |
-| ETH→Stellar bridge, SEP-24 off-ramp, money market, ZK swaps | **Roadmap** (premium UI kept, wiring in progress) |
+| ETH→Stellar bridge | **EVM→Fuji lock-and-mint bridge** — live (Sepolia → Fuji) |
+| ZK swaps | **XorrAMM confidential swap** — live (burn xUSD → AMM → fresh addr) |
+| SEP-24 off-ramp, money market | Roadmap (premium UI kept) |
 
 **Private, not anonymous.** Every eERC op encodes an *auditor PCT*; the designated
 auditor can selectively decrypt the full history for compliance — without
 weakening anyone else's privacy, and without a redeploy when the key rotates.
+
+---
+
+## What we built on eERC
+
+eERC (Encrypted ERC, by AvaCloud) is a privacy-preserving, ERC-20-style token
+standard: **balances and transfer amounts are encrypted on-chain** (BabyJubJub +
+ElGamal + Poseidon, proven with **Groth16 zk-SNARKs**), proofs are generated
+**client-side**, everything settles **fully on-chain with no relayers**, and
+**rotatable auditor keys** let a regulator decrypt for compliance. It runs
+**standalone** (a new private token, optional hidden supply) or **converter**
+(wrap an existing ERC-20), ships a **TypeScript SDK**, and runs on C-Chain / Fuji /
+custom L1s.
+
+XORR uses eERC **exactly like that** — and adds a product + DeFi layer on top:
+
+- **Standalone eERC token** — `xUSD`, deployed to Fuji via the official
+  `ava-labs/EncryptedERC` contracts (verifiers + BabyJubJub + Registrar +
+  EncryptedERC). Balances/amounts encrypted on-chain; supply hideable.
+- **Client-side, on-chain, no relayers** — the browser (`@avalabs/ac-eerc-sdk`)
+  generates every proof; the contract only verifies. Lifecycle:
+  `register → generateDecryptionKey → privateMint → privateTransfer → privateBurn`.
+- **Rotatable auditor** — the Compliance page sets an auditor
+  (`setAuditorPublicKey`) and the auditor decrypts history (`auditorDecrypt`).
+- **TypeScript SDK + premium UI** — the original XORR app, re-engined to eERC.
+
+**Beyond the core standard (all tested, live on Fuji):**
+- **Bridge** — `XorrBridge.sol`: lock USDC on another EVM chain → a relayer
+  `privateMint`s confidential xUSD on Fuji. Proven **Sepolia → Fuji** end-to-end.
+- **Confidential swap** — `XorrAMM.sol` (x·y=k): a private swap burns xUSD and
+  routes the output to a fresh, unlinked address.
+- **Full test suite** — `contracts/EncryptedERC/test/xorr-*.ts` (flow / bridge /
+  swap), 4 passing, plus live on-chain runs.
 
 ---
 
