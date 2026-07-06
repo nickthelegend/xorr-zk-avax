@@ -2,26 +2,27 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fmt, parseAmount, short } from "../lib/format";
 
-// USDC on Stellar = 7 decimals (ASSET_DECIMALS).
+// XORR on Avalanche: xUSD (eERC) = 2 decimals (ASSET_DECIMALS, matches the
+// EncryptedERC contracts' `decimals: 2`).
 
 test("parseAmount → base units", () => {
-  assert.equal(parseAmount("1"), 10_000_000n);
-  assert.equal(parseAmount("10.5"), 105_000_000n);
-  assert.equal(parseAmount("0.0000001"), 1n); // smallest unit
+  assert.equal(parseAmount("1"), 100n);
+  assert.equal(parseAmount("10.5"), 1_050n);
+  assert.equal(parseAmount("0.01"), 1n); // smallest unit
   assert.equal(parseAmount(""), 0n);
-  assert.equal(parseAmount("  3.25  "), 32_500_000n); // trims
+  assert.equal(parseAmount("  3.25  "), 325n); // trims
 });
 
-test("parseAmount truncates beyond 7 decimals", () => {
-  assert.equal(parseAmount("0.00000019"), 1n); // 8th digit dropped
+test("parseAmount truncates beyond 2 decimals", () => {
+  assert.equal(parseAmount("0.019"), 1n); // 3rd digit dropped
 });
 
 test("fmt strips trailing zeros and round-trips parseAmount", () => {
   assert.equal(fmt(0n), "0");
-  assert.equal(fmt(10_000_000n), "1");
-  assert.equal(fmt(105_000_000n), "10.5");
-  assert.equal(fmt(1n), "0.0000001");
-  for (const s of ["0", "1", "10.5", "123.456789", "0.0000001"]) {
+  assert.equal(fmt(100n), "1");
+  assert.equal(fmt(1_050n), "10.5");
+  assert.equal(fmt(1n), "0.01");
+  for (const s of ["0", "1", "10.5", "123.45", "0.01"]) {
     assert.equal(fmt(parseAmount(s)), s);
   }
 });
