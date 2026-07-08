@@ -74,22 +74,28 @@ XORR uses eERC **exactly like that** — and adds a product + DeFi layer on top:
   `privateMint`s confidential xUSD on Fuji. Proven **Sepolia → Fuji** end-to-end.
 - **Confidential swap** — `XorrAMM.sol` (x·y=k): a private swap burns xUSD and
   routes the output to a fresh, unlinked address.
-- **Full test suite** — `contracts/EncryptedERC/test/xorr-*.ts` (flow / bridge /
-  swap), 4 passing, plus live on-chain runs.
+- **Full test suite** — 144/144 passing across the upstream eERC suite plus
+  `contracts/EncryptedERC/test/xorr-*.ts` (flow / bridge / swap / bridge-unit /
+  amm-unit), real ZK proofs, plus live on-chain runs. See [`TESTING.md`](./TESTING.md).
 
 ---
 
 ## Monorepo layout
 
 ```
-xorr-eErc-avax/
-├─ contracts/EncryptedERC/     # ava-labs/EncryptedERC + XORR deploy script & Fuji config
-│  └─ scripts/deploy-xorr.ts   # deploys a STANDALONE eERC (xUSD) to Fuji, writes deployments/fuji.json
+xorr-zk-avax/
+├─ TESTING.md                  # full reproducible test matrix for both packages
+├─ contracts/EncryptedERC/     # ava-labs/EncryptedERC + XORR deploy script, DeFi contracts & Fuji config
+│  ├─ contracts/xorr/          # XorrBridge.sol (lock-and-mint bridge), XorrAMM.sol (confidential swap)
+│  ├─ test/                    # upstream eERC suite + xorr-flow / xorr-bridge / xorr-swap / *-unit tests
+│  ├─ scripts/deploy-xorr.ts   # deploys a STANDALONE eERC (xUSD) to Fuji, writes deployments/fuji.json
+│  └─ deployments/fuji.json    # deployed addresses (EncryptedERC, Registrar, BabyJubJub, verifiers)
 └─ web/                        # the XORR premium UI (Next.js 15), engine = @avalabs/ac-eerc-sdk
    ├─ app/                     # home hub (Mint/Pay/Swap/Bridge), withdraw, compliance, faucet, profile, …
    ├─ components/
    │  └─ stellar-wallet-provider.tsx  # the eERC-backed useWallet() context (wagmi + useEERC)
    ├─ lib/config.ts            # Fuji + EERC_ADDRESS + circuit URLs
+   ├─ test/                    # node --test unit suite (format/identity/poseidon/notes/compliance/…)
    └─ public/circuits/         # eERC circuit artifacts (*.wasm / *.zkey) served to the SDK
 ```
 
@@ -152,19 +158,43 @@ Set an **auditor** on the Compliance page to demo selective disclosure.
 Notes & docs: the `avalanche-privacy-skills` collection
 (`npx skills add nickthelegend/avalanche-privacy-skills`).
 
+## Deployed on Fuji (43113)
+
+From `contracts/EncryptedERC/deployments/fuji.json` — the standalone eERC token
+deployed by `scripts/deploy-xorr.ts` ("Molfi Confidential USD" / **cUSD / xUSD**,
+2 decimals):
+
+| Contract | Address |
+|---|---|
+| `EncryptedERC` | [`0x320C389607d109B12836D6B8F507C7e87783cf82`](https://testnet.snowtrace.io/address/0x320C389607d109B12836D6B8F507C7e87783cf82) |
+| `Registrar` | [`0x098561944b2437288Fe98d3F5FA824868899104a`](https://testnet.snowtrace.io/address/0x098561944b2437288Fe98d3F5FA824868899104a) |
+| `BabyJubJub` | [`0x1fc4DEFBD11b8b72c37f8706ACC2b2Eb63262A80`](https://testnet.snowtrace.io/address/0x1fc4DEFBD11b8b72c37f8706ACC2b2Eb63262A80) |
+| Registration verifier | `0x1E468EFFA30Cf3C4b6da57c282357bE10E744DFa` |
+| Mint verifier | `0x8E1c326a159657d2DeE3f3a5246f32170a54afC1` |
+| Transfer verifier | `0x018a953267FFf33D36702be131f831932ca703a0` |
+| Withdraw verifier | `0xFe9F70E9B0f75931618B3Ca73ADD180A4a42Ac0d` |
+| Burn verifier | `0x43a1e9f75Eb8abfA54c0d7E16eBFd64444E4a5EA` |
+
+RPC: `https://api.avax-test.network/ext/bc/C/rpc` · Explorer: `https://testnet.snowtrace.io`
+
 ---
 
 ## Tested & live on Fuji
 
-**Contract test suite** (`cd contracts/EncryptedERC && npx hardhat test test/xorr-*.ts`) — real zk proofs, local network:
+**Contract test suite** (`cd contracts/EncryptedERC && npx hardhat test`) — real zk proofs, local Hardhat network:
 
 | Test | Proves |
 |---|---|
 | `test/xorr-flow.ts` | mint 100 xUSD → Alice, Alice privately pays Bob 30, Bob withdraws (burn) 10 — balances decrypt correctly |
 | `test/xorr-bridge.ts` | lock 50 USDC → relayer mints 50 private xUSD; burn 20 xUSD → relayer releases 20 USDC; replay-guarded |
 | `test/xorr-swap.ts` | public AMM swap (50 USDC → XAV) **and** confidential swap (burn xUSD → relayer swaps → output to a fresh address) |
+| `test/xorr-bridge-unit.ts` | 13 unit tests: `XorrBridge` access control, reverts, events, nonce/accounting |
+| `test/xorr-amm-unit.ts` | 18 unit tests: `XorrAMM` constant-product math, slippage, reserves |
 
-→ **4 passing.**
+→ **144/144 passing** (~45s), including the upstream `EncryptedERC` converter/standalone/registrar
+suite. The `web/` package has its own **51/51** passing unit suite (`cd web && npm test`) for the
+pure crypto/identity/formatting logic. Full reproducible matrix, exact commands, and Node-version
+requirements: [`TESTING.md`](./TESTING.md).
 
 **Live on Fuji** (real Snowtrace txs):
 - Deposit + pay to a different wallet — [mint→Alice](https://testnet.snowtrace.io/tx/0xa3a3b767a05baa3bc68d969709801ecf5150f89e52eca60caa400ed1d60874d8), [Alice→Bob confidential](https://testnet.snowtrace.io/tx/0x5de968517cb57525b4839b68c91cd4052e9c89a824f752b05507b84d1e615e5c) (`scripts/live-mint-pay.ts`)
