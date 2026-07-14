@@ -1,16 +1,20 @@
 // XORR DeFi periphery on Fuji — addresses + minimal ABIs for the Swap & Bridge
-// tabs. Addresses come from contracts/scripts/deploy-xorr-defi.ts and can be
-// overridden via NEXT_PUBLIC_* env vars.
+// tabs. Addresses come from contracts/EncryptedERC/deployments/fuji-defi.json
+// (single source in lib/config.ts) and can be overridden via NEXT_PUBLIC_* vars.
+import {
+  USDC_ADDRESS,
+  XAV_ADDRESS,
+  AMM_ADDRESS,
+  BRIDGE_ADDRESS,
+  ASSET_DECIMALS,
+} from "./config";
+
 export const DEFI = {
-  usdc: (process.env.NEXT_PUBLIC_USDC ||
-    "0x787bCE271940158A830453Ed9d6F8fB7B916BB76") as `0x${string}`,
-  xav: (process.env.NEXT_PUBLIC_XAV ||
-    "0x6eC47E4601dA3C6246A0cdc7721a39CF224Df390") as `0x${string}`,
-  amm: (process.env.NEXT_PUBLIC_AMM ||
-    "0x1A0236a0Fb5Ef1944F0200D62414A5366b0477E8") as `0x${string}`,
-  bridge: (process.env.NEXT_PUBLIC_BRIDGE ||
-    "0x9B30a93976a99df8aD9542eE8931cD78e027f110") as `0x${string}`,
-  decimals: 2,
+  usdc: USDC_ADDRESS,
+  xav: XAV_ADDRESS,
+  amm: AMM_ADDRESS,
+  bridge: BRIDGE_ADDRESS,
+  decimals: ASSET_DECIMALS,
 };
 
 export const ERC20_ABI = [
