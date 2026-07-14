@@ -68,21 +68,29 @@ export const SHIELDED_SYMBOL = "xUSD";
 
 // ── zk circuit + prover artifacts (served from public/circuits) ──────────────
 // Each confidential op needs a wasm + zkey (copied from the contracts zkit build).
+// The eERC SDK treats a path that doesn't start with "http" as a filesystem path
+// and prepends "file://" (→ `file:///circuits/mint.wasm`, unfetchable in-browser),
+// so we resolve to ABSOLUTE http(s) URLs against the page origin on the client.
+// During SSR `window` is absent, so these stay root-relative (the engine only
+// initialises useEERC on the client, after `window` exists).
+const ORIGIN = typeof window !== "undefined" ? window.location.origin : "";
+const asset = (p: string) => `${ORIGIN}${p}`;
+
 export const circuitURLs = {
   register: {
-    wasm: "/circuits/registration.wasm",
-    zkey: "/circuits/registration.zkey",
+    wasm: asset("/circuits/registration.wasm"),
+    zkey: asset("/circuits/registration.zkey"),
   },
-  transfer: { wasm: "/circuits/transfer.wasm", zkey: "/circuits/transfer.zkey" },
-  mint: { wasm: "/circuits/mint.wasm", zkey: "/circuits/mint.zkey" },
-  withdraw: { wasm: "/circuits/withdraw.wasm", zkey: "/circuits/withdraw.zkey" },
-  burn: { wasm: "/circuits/burn.wasm", zkey: "/circuits/burn.zkey" },
+  transfer: { wasm: asset("/circuits/transfer.wasm"), zkey: asset("/circuits/transfer.zkey") },
+  mint: { wasm: asset("/circuits/mint.wasm"), zkey: asset("/circuits/mint.zkey") },
+  withdraw: { wasm: asset("/circuits/withdraw.wasm"), zkey: asset("/circuits/withdraw.zkey") },
+  burn: { wasm: asset("/circuits/burn.wasm"), zkey: asset("/circuits/burn.zkey") },
 };
 
 // Prover WASM assets used by the SDK proof pipeline.
 export const proverURLs = {
-  transferURL: "/circuits/transfer.wasm",
-  multiWasmURL: "/circuits/transfer.wasm",
+  transferURL: asset("/circuits/transfer.wasm"),
+  multiWasmURL: asset("/circuits/transfer.wasm"),
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

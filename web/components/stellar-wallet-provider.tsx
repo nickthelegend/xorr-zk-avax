@@ -8,6 +8,7 @@
 // Stellar/Soroban. Balances and amounts are encrypted on-chain; all crypto runs
 // client-side and the contract only verifies zk-SNARK proofs.
 import {
+  Component,
   createContext,
   useContext,
   useEffect,
@@ -163,13 +164,48 @@ const DEFAULT_CTX: WalletContextValue = {
   refetchBalance: () => {},
 };
 
+// The eERC SDK's in-browser balance decryption (BabyJubJub/ElGamal + Poseidon)
+// can throw transiently on certain ciphertext states ("The last element of the
+// message must be 0"). That's an engine-only concern — pages like the faucet
+// (a plain ERC-20 mint) don't need eERC at all — so we isolate the engine behind
+// an error boundary: on a decryption fault we fall back to the safe default
+// context (keeping the rest of the app usable) and auto-retry the engine shortly
+// after, rather than crashing the whole tree.
+class EngineErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode; onRetry: () => void },
+  { failed: boolean }
+> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch() {
+    // give the SDK a beat, then remount the engine and try again
+    setTimeout(() => {
+      this.setState({ failed: false });
+      this.props.onRetry();
+    }, 1500);
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
 export function StellarWalletProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
+  const [engineKey, setEngineKey] = useState(0);
   useEffect(() => setMounted(true), []);
   if (!mounted) {
     return <Ctx.Provider value={DEFAULT_CTX}>{children}</Ctx.Provider>;
   }
-  return <EngineProvider>{children}</EngineProvider>;
+  return (
+    <EngineErrorBoundary
+      fallback={<Ctx.Provider value={DEFAULT_CTX}>{children}</Ctx.Provider>}
+      onRetry={() => setEngineKey((k) => k + 1)}
+    >
+      <EngineProvider key={engineKey}>{children}</EngineProvider>
+    </EngineErrorBoundary>
+  );
 }
 
 function EngineProvider({ children }: { children: ReactNode }) {
@@ -224,7 +260,17 @@ function EngineProvider({ children }: { children: ReactNode }) {
     circuitURLs,
     decryptionKey
   );
-  const bal = eerc?.useEncryptedBalance?.();
+  // The eERC encrypted-balance hook decrypts on-chain ciphertext in-render and can
+  // throw on certain states (see EncryptedBalanceProbe). We call it inside an
+  // isolated child boundary and lift its result here, so a decryption fault never
+  // tears down the engine — connect, the plain-USDC faucet, and navigation keep
+  // working even when the shielded balance can't be read.
+  const [bal, setBal] = useState<any>(undefined);
+  const [balAttempt, setBalAttempt] = useState(0);
+  const onBalFail = useCallback(() => {
+    setBal(undefined);
+    setBalAttempt((n) => (n < 3 ? n + 1 : n)); // bounded retry, then give up quietly
+  }, []);
 
   const isInitialized = Boolean(eerc?.isInitialized);
   const isRegistered = Boolean(eerc?.isRegistered);
@@ -398,5 +444,43 @@ function EngineProvider({ children }: { children: ReactNode }) {
     notifyTx,
   ]);
 
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={value}>
+      {eerc ? (
+        <BalanceBoundary key={balAttempt} onFail={onBalFail}>
+          <EncryptedBalanceProbe eerc={eerc} onBal={setBal} />
+        </BalanceBoundary>
+      ) : null}
+      {children}
+    </Ctx.Provider>
+  );
+}
+
+// Calls the eERC balance hook in isolation and lifts the result to the engine.
+// The hook throws synchronously in-render on certain ciphertext states (the SDK's
+// ElGamal/Poseidon decrypt asserts message padding). Rendering it here — behind
+// BalanceBoundary — means that throw is contained to the balance readout instead
+// of collapsing the whole wallet engine.
+function EncryptedBalanceProbe({ eerc, onBal }: { eerc: any; onBal: (b: unknown) => void }) {
+  const bal = eerc?.useEncryptedBalance?.();
+  useEffect(() => {
+    onBal(bal);
+  }, [bal, onBal]);
+  return null;
+}
+
+class BalanceBoundary extends Component<
+  { children: ReactNode; onFail: () => void },
+  { failed: boolean }
+> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch() {
+    this.props.onFail();
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
 }
