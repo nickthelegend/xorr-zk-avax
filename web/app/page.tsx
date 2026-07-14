@@ -9,14 +9,16 @@ import { PayReceive } from "@/components/flows/pay-receive";
 import { DepositForm } from "@/components/flows/deposit-form";
 import { AmmSwapForm } from "@/components/flows/amm-swap-form";
 import { BridgeLockForm } from "@/components/flows/bridge-lock-form";
+import { PayrollForm } from "@/components/flows/payroll-form";
 import { ASSET_SYMBOL } from "@/lib/config";
 
-const TABS = ["Deposit", "Pay", "Swap", "Bridge"] as const;
+const TABS = ["Deposit", "Pay", "Payroll", "Swap", "Bridge"] as const;
 type Tab = (typeof TABS)[number];
 
 const FORMS: Record<Tab, React.ComponentType> = {
   Deposit: DepositForm,
   Pay: PayReceive,
+  Payroll: PayrollForm,
   Swap: AmmSwapForm,
   Bridge: BridgeLockForm,
 };
@@ -29,6 +31,10 @@ const META: Record<Tab, { title: string; desc: string }> = {
   Pay: {
     title: "Pay & Receive",
     desc: "Send a confidential payment, or share your address to get paid. Amounts and the sender↔receiver link stay hidden on-chain, verified by a Groth16 proof.",
+  },
+  Payroll: {
+    title: "Payroll",
+    desc: "Pay a whole team at once by email. Fund the batch in one transaction; each person gets a private claim link and collects into any wallet — no recipient wallet needed up front, and the employee↔amount mapping never touches the chain.",
   },
   Swap: {
     title: "Swap",
@@ -43,6 +49,7 @@ const META: Record<Tab, { title: string; desc: string }> = {
 const QUERY_TO_TAB: Record<string, Tab> = {
   pay: "Pay",
   receive: "Pay",
+  payroll: "Payroll",
   swap: "Swap",
   bridge: "Bridge",
   deposit: "Deposit",
