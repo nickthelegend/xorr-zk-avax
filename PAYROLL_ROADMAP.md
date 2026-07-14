@@ -57,8 +57,21 @@ amounts. The employee↔email↔salary mapping never touches the chain.
       XChaCha20-Poly1305) encrypting the amount to a compliance/auditor key. The auditor
       decrypts the full run in-browser for reporting; the public sees only commitments.
       `web/lib/compliance.ts`, tested (round-trip, wrong-key + tamper rejection, full-run).
-- [x] Tests: 11 Hardhat (commit/claim/bad-commit/front-run/sweep/pool-accounting) + 7 ECIES
-      + live Fuji UI e2e (fund → auditor decrypt → claim). All green.
+- [x] **Real compliance generation + verification** — `ComplianceRegistry.sol`
+      (Fuji `0x0AdaA34B9C8f43b423EB976fF107CfeB890d2E53`):
+  - *Generate* — the auditor decrypts each slot and checks the amount opens its on-chain
+    `keccak256(amount, salt)` commitment (a lying employer is caught), then signs a report
+    hash. `attest()` verifies the signature and anchors `{auditor, reportHash, total,
+    timestamp}` on-chain. The auditor never needs gas (signs off-chain, anyone relays).
+  - *Verify* — a **Verify** tab lets anyone re-check a published report with public data
+    only: re-derive every commitment, re-compute the report hash, confirm it matches the
+    anchored attestation, and that the signer is the run's designated auditor. A forged
+    report (any altered amount) fails the commitment check. viem ↔ ethers report-hash
+    encoding cross-checked identical.
+- [x] Tests: 11 (confidential) + 5 (ComplianceRegistry attest/verify + full flow) Hardhat +
+      7 ECIES + viem/ethers hash cross-check + live Fuji UI e2e
+      (fund → verify vs commitments → attest on-chain → independent VERIFIED → forged REJECTED).
+      All green.
 - [ ] *Next:* route the payout itself through the eERC (`privateMint`/`privateTransfer`) so
       the amount is ciphertext end-to-end — today the USDC transfer still reveals an amount at
       claim time; commitments hide the pre-claim split and compliance stays auditable.

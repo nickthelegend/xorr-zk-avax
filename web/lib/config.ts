@@ -62,6 +62,9 @@ export const PAYROLL_ADDRESS = (process.env.NEXT_PUBLIC_PAYROLL ||
 // ConfidentialPayroll — hidden-amount payroll + compliance ciphers (v2).
 export const CONF_PAYROLL_ADDRESS = (process.env.NEXT_PUBLIC_CONF_PAYROLL ||
   "0xf13e2A0631C9c52124DCaE61103137341729FE03") as `0x${string}`;
+// ComplianceRegistry — on-chain signed attestation of verified confidential runs.
+export const COMPLIANCE_REGISTRY_ADDRESS = (process.env.NEXT_PUBLIC_COMPLIANCE ||
+  "0x0AdaA34B9C8f43b423EB976fF107CfeB890d2E53") as `0x${string}`;
 export const RELAYER_ADDRESS = (process.env.NEXT_PUBLIC_RELAYER ||
   "0x86076053d71E1c95b3c08e68BA39049024D69E67") as `0x${string}`;
 

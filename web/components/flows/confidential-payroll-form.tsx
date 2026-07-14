@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAccount, useReadContract, useWriteContract, usePublicClient } from "wagmi";
 import type { Hex } from "viem";
-import { Plus, Trash2, Copy, Mail, Check, ShieldCheck, KeyRound, Eye } from "lucide-react";
+import { Plus, Trash2, Copy, Mail, Check, ShieldCheck, KeyRound, Eye, Stamp, BadgeCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Banner } from "@/components/wallet/scaffold";
@@ -20,7 +20,20 @@ import {
   toUsdc,
   fromUsdc,
 } from "@/lib/payroll";
-import { newAuditorKey, encryptToAuditor, decryptAsAuditor, type AuditorKey } from "@/lib/compliance";
+import {
+  newAuditorKey,
+  auditorAddress,
+  encryptToAuditor,
+  decryptAsAuditor,
+  computeReportHash,
+  signAttestation,
+  COMPLIANCE_REGISTRY,
+  COMPLIANCE_REGISTRY_ABI,
+  type AuditorKey,
+  type ComplianceReport,
+  type ReportSlot,
+} from "@/lib/compliance";
+import type { Hex } from "viem";
 import { toast } from "sonner";
 
 interface Row {
@@ -52,7 +65,8 @@ export function ConfidentialPayrollForm() {
 
   // compliance panel
   const [auditKey, setAuditKey] = useState("");
-  const [report, setReport] = useState<{ slot: number; email: string; amount: string }[] | null>(null);
+  const [report, setReport] = useState<{ built: ComplianceReport; rows: { slot: number; email: string; amount: string; verified: boolean }[] } | null>(null);
+  const [attested, setAttested] = useState<{ hash: string; json: string } | null>(null);
 
   const usdcBal = useReadContract({
     address: DEFI.usdc,
@@ -118,7 +132,9 @@ export function ConfidentialPayrollForm() {
         address: CONF_PAYROLL,
         abi: CONF_PAYROLL_ABI,
         functionName: "createRun",
-        args: [DEFI.usdc, links.map((l) => l.claimAddr), commits, ciphers, total, address, expiry],
+        // the run's on-chain auditor = the EVM identity of the compliance key,
+        // so only that key can later sign a valid attestation
+        args: [DEFI.usdc, links.map((l) => l.claimAddr), commits, ciphers, total, auditorAddress(auditor.priv), expiry],
       });
       await publicClient!.waitForTransactionReceipt({ hash: h });
 
@@ -145,36 +161,89 @@ export function ConfidentialPayrollForm() {
     setTimeout(() => setCopied(null), 1500);
   }
 
-  // ── Compliance: auditor decrypts the whole run from on-chain ciphers ────────
+  // ── Compliance: auditor decrypts each slot AND verifies it against the
+  //    on-chain commitment (a lying employer is caught here) → a report. ───────
   async function runCompliance() {
     if (!result) return;
     const priv = auditKey.trim() as Hex;
     if (!/^0x[0-9a-fA-F]{64}$/.test(priv)) return toast.error("Paste a 32-byte auditor private key");
     setBusy(true);
+    setAttested(null);
     try {
       const n = Number(
         (await publicClient!.readContract({ address: CONF_PAYROLL, abi: CONF_PAYROLL_ABI, functionName: "slotCount", args: [BigInt(result.id)] })) as bigint,
       );
-      const out: { slot: number; email: string; amount: string }[] = [];
+      const chainId = await publicClient!.getChainId();
+      const slots: ReportSlot[] = [];
+      const rows: { slot: number; email: string; amount: string; verified: boolean }[] = [];
       for (let s = 0; s < n; s++) {
         const blob = (await publicClient!.readContract({
           address: CONF_PAYROLL, abi: CONF_PAYROLL_ABI, functionName: "auditorCipher", args: [BigInt(result.id), BigInt(s)],
         })) as Hex;
+        const onchain = (await publicClient!.readContract({
+          address: CONF_PAYROLL, abi: CONF_PAYROLL_ABI, functionName: "getSlot", args: [BigInt(result.id), BigInt(s)],
+        })) as { amountCommit: Hex };
         const rec = decryptAsAuditor(priv, blob);
-        out.push({
-          slot: s,
-          email: rec?.email ?? "—",
-          amount: rec ? Number(rec.amount).toFixed(2) : "decrypt failed",
-        });
+        if (!rec) {
+          rows.push({ slot: s, email: "—", amount: "decrypt failed", verified: false });
+          continue;
+        }
+        const units = toUsdc(rec.amount);
+        const verified = amountCommit(units, rec.salt) === onchain.amountCommit;
+        slots.push({ slot: s, email: rec.email, amount: units, salt: rec.salt, commit: onchain.amountCommit });
+        rows.push({ slot: s, email: rec.email, amount: Number(rec.amount).toFixed(2), verified });
       }
-      setReport(out);
-      const total = out.reduce((a, r) => a + (Number(r.amount) || 0), 0);
-      toast.success(`Decrypted ${n} slots · total ${total.toFixed(2)} USDC`);
+      const total = slots.reduce((a, s) => a + s.amount, 0n);
+      const built: ComplianceReport = {
+        payroll: CONF_PAYROLL,
+        runId: result.id,
+        chainId,
+        auditor: auditorAddress(priv),
+        total,
+        slots,
+      };
+      setReport({ built, rows });
+      toast.success(`Verified ${rows.filter((r) => r.verified).length}/${n} slots · total ${fromUsdc(total)} USDC`);
     } catch (e) {
       toast.error((e as Error).message.slice(0, 140));
     } finally {
       setBusy(false);
     }
+  }
+
+  // ── Attestation: sign the verified report with the auditor key + anchor it. ──
+  async function attest() {
+    if (!report || !address) return;
+    const priv = auditKey.trim() as Hex;
+    setBusy(true);
+    try {
+      const r = report.built;
+      const reportHash = computeReportHash(r);
+      const digest = (await publicClient!.readContract({
+        address: COMPLIANCE_REGISTRY, abi: COMPLIANCE_REGISTRY_ABI, functionName: "attestationDigest",
+        args: [r.payroll, BigInt(r.runId), reportHash, r.total, r.auditor],
+      })) as Hex;
+      const sig = await signAttestation(priv, digest); // auditor signs off-chain (no gas)
+      const h = await writeContractAsync({
+        address: COMPLIANCE_REGISTRY, abi: COMPLIANCE_REGISTRY_ABI, functionName: "attest",
+        args: [r.payroll, BigInt(r.runId), reportHash, r.total, r.auditor, sig],
+      });
+      await publicClient!.waitForTransactionReceipt({ hash: h });
+      const { reportToJSON } = await import("@/lib/compliance");
+      setAttested({ hash: h, json: reportToJSON(r) });
+      toast.success("Compliance report attested on-chain ✓", {
+        action: { label: "Snowtrace ↗", onClick: () => window.open(explorerTx(h), "_blank") },
+      });
+    } catch (e) {
+      toast.error((e as Error).message.slice(0, 140));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function copyReport() {
+    if (attested) await navigator.clipboard.writeText(attested.json);
+    toast.success("Report JSON copied — anyone can verify it in the Verify tab");
   }
 
   // ── Post-fund view: claim links + compliance ───────────────────────────────
@@ -231,7 +300,7 @@ export function ConfidentialPayrollForm() {
           <div className="flex items-center gap-2">
             <Input value={auditKey} onChange={(e) => setAuditKey(e.target.value)} placeholder="0x… auditor private key" className="bg-muted/50 border-border h-11 font-mono text-xs" />
             <Button onClick={runCompliance} disabled={busy} className="h-11 shrink-0 gap-1.5">
-              <Eye className="h-4 w-4" /> Decrypt run
+              <Eye className="h-4 w-4" /> Verify run
             </Button>
           </div>
           {report && (
@@ -241,24 +310,60 @@ export function ConfidentialPayrollForm() {
                   <tr>
                     <th className="px-3 py-2 text-left font-medium">Slot</th>
                     <th className="px-3 py-2 text-left font-medium">Recipient</th>
-                    <th className="px-3 py-2 text-right font-medium">Amount (auditor-only)</th>
+                    <th className="px-3 py-2 text-right font-medium">Amount</th>
+                    <th className="px-3 py-2 text-center font-medium">Commitment</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {report.map((r) => (
+                  {report.rows.map((r) => (
                     <tr key={r.slot} className="border-t border-border">
                       <td className="px-3 py-2 font-mono text-muted-foreground">{r.slot}</td>
                       <td className="px-3 py-2 text-foreground">{r.email}</td>
                       <td className="px-3 py-2 text-right font-mono text-foreground">{r.amount} USDC</td>
+                      <td className="px-3 py-2 text-center">
+                        {r.verified ? (
+                          <span className="inline-flex items-center gap-1 text-[var(--long-text,#22c55e)]"><BadgeCheck className="h-4 w-4" /> matches</span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-destructive"><X className="h-4 w-4" /> mismatch</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
+
+          {report && !attested && (
+            <Button onClick={attest} disabled={busy || !report.rows.every((r) => r.verified)} className="w-full h-11 gap-1.5">
+              <Stamp className="h-4 w-4" /> Sign &amp; attest report on-chain
+            </Button>
+          )}
+
+          {attested && (
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+              <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
+                <BadgeCheck className="h-4 w-4" /> Attested on-chain
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                A signed report hash is now anchored on-chain. Share the report JSON — anyone can verify it
+                against the commitments in the <b>Verify</b> tab, no keys needed.
+              </p>
+              <div className="flex gap-2">
+                <button onClick={copyReport} className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs hover:bg-muted">
+                  <Copy className="h-3.5 w-3.5" /> Copy report JSON
+                </button>
+                <a href={explorerTx(attested.hash)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs hover:bg-muted">
+                  Snowtrace ↗
+                </a>
+              </div>
+            </div>
+          )}
+
           <Banner tone="info">
-            The public sees only commitments on-chain. This decrypt runs entirely in your browser using the
-            auditor key — the amounts never leave your device.
+            Every amount is checked against its on-chain <code>keccak</code> commitment, so the employer can’t
+            feed a false report. The verified report is signed by the auditor key and anchored on-chain — then
+            anyone can re-verify it with public data alone.
           </Banner>
         </div>
       </div>

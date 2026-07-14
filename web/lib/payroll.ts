@@ -165,6 +165,26 @@ export const CONF_PAYROLL_ABI = [
   { type: "function", name: "slotCount", stateMutability: "view", inputs: [{ name: "id", type: "uint256" }], outputs: [{ type: "uint256" }] },
   { type: "function", name: "auditorCipher", stateMutability: "view", inputs: [{ name: "id", type: "uint256" }, { name: "slot", type: "uint256" }], outputs: [{ type: "bytes" }] },
   { type: "function", name: "runCount", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  {
+    type: "function",
+    name: "getRun",
+    stateMutability: "view",
+    inputs: [{ name: "id", type: "uint256" }],
+    outputs: [
+      {
+        type: "tuple",
+        components: [
+          { name: "employer", type: "address" },
+          { name: "token", type: "address" },
+          { name: "createdAt", type: "uint64" },
+          { name: "expiry", type: "uint64" },
+          { name: "pool", type: "uint128" },
+          { name: "disbursed", type: "uint128" },
+          { name: "auditor", type: "address" },
+        ],
+      },
+    ],
+  },
 ] as const;
 
 /** Fresh 32-byte commitment salt. */
