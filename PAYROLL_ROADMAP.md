@@ -72,9 +72,14 @@ amounts. The employee↔email↔salary mapping never touches the chain.
       7 ECIES + viem/ethers hash cross-check + live Fuji UI e2e
       (fund → verify vs commitments → attest on-chain → independent VERIFIED → forged REJECTED).
       All green.
-- [ ] *Next:* route the payout itself through the eERC (`privateMint`/`privateTransfer`) so
-      the amount is ciphertext end-to-end — today the USDC transfer still reveals an amount at
-      claim time; commitments hide the pre-claim split and compliance stays auditable.
+- [x] **End-to-end ciphertext payout (eERC rail)** — the new **eERC** sub-tab pays each
+      recipient in confidential **xUSD** via `privateMint`: the amount is encrypted to the
+      recipient's key (and the auditor's) and lands straight in their encrypted balance —
+      **never plaintext on-chain, no claim step, nothing to reveal**. Compliance is the eERC's
+      **built-in auditor**: the designated auditor decrypts every payout on the Compliance
+      page. Live-verified on Fuji (`privateMint` → confidential balance, method `0x204ac7cc`)
+      via `e2e/xorr-eerc-payout.spec.ts`. Recipients must be registered eERC users; issuance
+      is owner-gated on the standalone token (the USDC rails serve unregistered/email recipients).
 
 ## Phase 3 — Delivery & UX
 
