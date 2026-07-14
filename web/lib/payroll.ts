@@ -5,10 +5,11 @@
 // emailed link (carried in the URL hash — never sent to a server). To collect, the
 // claim key signs the recipient's payout address and the escrow releases the funds.
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import type { Hex } from "viem";
-import { PAYROLL_ADDRESS } from "./config";
+import { keccak256, encodeAbiParameters, type Hex } from "viem";
+import { PAYROLL_ADDRESS, CONF_PAYROLL_ADDRESS } from "./config";
 
 export const PAYROLL = PAYROLL_ADDRESS;
+export const CONF_PAYROLL = CONF_PAYROLL_ADDRESS;
 
 export const PAYROLL_ABI = [
   {
@@ -98,6 +99,86 @@ export const PAYROLL_ABI = [
   },
 ] as const;
 
+// ── ConfidentialPayroll (v2) ABI + helpers ───────────────────────────────────
+export const CONF_PAYROLL_ABI = [
+  {
+    type: "function",
+    name: "createRun",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "token", type: "address" },
+      { name: "claimAddrs", type: "address[]" },
+      { name: "commits", type: "bytes32[]" },
+      { name: "auditorCiphers_", type: "bytes[]" },
+      { name: "pool", type: "uint128" },
+      { name: "auditor", type: "address" },
+      { name: "expiry", type: "uint64" },
+    ],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "claim",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "id", type: "uint256" },
+      { name: "slot", type: "uint256" },
+      { name: "to", type: "address" },
+      { name: "amount", type: "uint128" },
+      { name: "salt", type: "bytes32" },
+      { name: "signature", type: "bytes" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "claimDigest",
+    stateMutability: "view",
+    inputs: [
+      { name: "id", type: "uint256" },
+      { name: "slot", type: "uint256" },
+      { name: "to", type: "address" },
+      { name: "amount", type: "uint128" },
+      { name: "salt", type: "bytes32" },
+    ],
+    outputs: [{ type: "bytes32" }],
+  },
+  {
+    type: "function",
+    name: "getSlot",
+    stateMutability: "view",
+    inputs: [
+      { name: "id", type: "uint256" },
+      { name: "slot", type: "uint256" },
+    ],
+    outputs: [
+      {
+        type: "tuple",
+        components: [
+          { name: "claimAddr", type: "address" },
+          { name: "amountCommit", type: "bytes32" },
+          { name: "claimed", type: "bool" },
+        ],
+      },
+    ],
+  },
+  { type: "function", name: "slotCount", stateMutability: "view", inputs: [{ name: "id", type: "uint256" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "auditorCipher", stateMutability: "view", inputs: [{ name: "id", type: "uint256" }, { name: "slot", type: "uint256" }], outputs: [{ type: "bytes" }] },
+  { type: "function", name: "runCount", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+] as const;
+
+/** Fresh 32-byte commitment salt. */
+export function newSalt(): Hex {
+  return generatePrivateKey(); // 32 random bytes, hex — perfect as a salt
+}
+
+/** keccak256(abi.encode(uint128 amount, bytes32 salt)) — matches the contract. */
+export function amountCommit(amount: bigint, salt: Hex): Hex {
+  return keccak256(
+    encodeAbiParameters([{ type: "uint128" }, { type: "bytes32" }], [amount, salt]),
+  );
+}
+
 export interface Recipient {
   email: string;
   amount: string; // human string, USDC (2 decimals)
@@ -123,6 +204,19 @@ export function claimUrl(origin: string, id: number, slot: number, key: Hex): st
   return `${origin}/payroll/claim#id=${id}&slot=${slot}&k=${key}`;
 }
 
+/** Confidential (v2) claim URL — also carries the amount + commitment salt (revealed
+ *  only to this recipient) so the on-chain commitment can be opened at claim time. */
+export function confClaimUrl(
+  origin: string,
+  id: number,
+  slot: number,
+  key: Hex,
+  amountUnits: bigint,
+  salt: Hex,
+): string {
+  return `${origin}/payroll/claim#v=2&id=${id}&slot=${slot}&amt=${amountUnits}&salt=${salt}&k=${key}`;
+}
+
 /** A ready-to-send mailto: link the employer can click to email a claim link. */
 export function claimMailto(email: string, amount: string, url: string): string {
   const subject = encodeURIComponent("You have a private payment from XORR Payroll");
@@ -134,8 +228,18 @@ export function claimMailto(email: string, amount: string, url: string): string 
   return `mailto:${email}?subject=${subject}&body=${body}`;
 }
 
-/** Parse the claim parameters out of a claim page URL hash (#id=..&slot=..&k=0x..). */
-export function parseClaimHash(hash: string): { id: number; slot: number; key: Hex } | null {
+export interface ParsedClaim {
+  v: 1 | 2;
+  id: number;
+  slot: number;
+  key: Hex;
+  amount?: bigint; // v2 only — the (private) amount revealed at claim
+  salt?: Hex; // v2 only — the commitment salt
+}
+
+/** Parse the claim parameters out of a claim page URL hash. v1: #id=..&slot=..&k=0x..
+ *  v2 (confidential): #v=2&id=..&slot=..&amt=..&salt=0x..&k=0x.. */
+export function parseClaimHash(hash: string): ParsedClaim | null {
   const p = new URLSearchParams(hash.replace(/^#/, ""));
   const id = Number(p.get("id"));
   const slot = Number(p.get("slot"));
@@ -143,7 +247,14 @@ export function parseClaimHash(hash: string): { id: number; slot: number; key: H
   if (!Number.isInteger(id) || id < 0) return null;
   if (!Number.isInteger(slot) || slot < 0) return null;
   if (!key || !/^0x[0-9a-fA-F]{64}$/.test(key)) return null;
-  return { id, slot, key };
+  if (p.get("v") === "2") {
+    const salt = p.get("salt") as Hex | null;
+    const amtStr = p.get("amt");
+    if (!salt || !/^0x[0-9a-fA-F]{64}$/.test(salt)) return null;
+    if (!amtStr || !/^\d+$/.test(amtStr)) return null;
+    return { v: 2, id, slot, key, amount: BigInt(amtStr), salt };
+  }
+  return { v: 1, id, slot, key };
 }
 
 /** Sign an on-chain claim digest with the recipient's claim key (EIP-191). */

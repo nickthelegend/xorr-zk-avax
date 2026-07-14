@@ -59,6 +59,9 @@ export const BRIDGE_ADDRESS = (process.env.NEXT_PUBLIC_BRIDGE ||
 // PayrollEscrow — claim-link batch payroll (deployed 2026-07-14).
 export const PAYROLL_ADDRESS = (process.env.NEXT_PUBLIC_PAYROLL ||
   "0x02D86e65653B9C962D3b9616C13dD3cF34aF2019") as `0x${string}`;
+// ConfidentialPayroll — hidden-amount payroll + compliance ciphers (v2).
+export const CONF_PAYROLL_ADDRESS = (process.env.NEXT_PUBLIC_CONF_PAYROLL ||
+  "0xf13e2A0631C9c52124DCaE61103137341729FE03") as `0x${string}`;
 export const RELAYER_ADDRESS = (process.env.NEXT_PUBLIC_RELAYER ||
   "0x86076053d71E1c95b3c08e68BA39049024D69E67") as `0x${string}`;
 

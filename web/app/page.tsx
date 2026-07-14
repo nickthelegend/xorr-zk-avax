@@ -9,7 +9,7 @@ import { PayReceive } from "@/components/flows/pay-receive";
 import { DepositForm } from "@/components/flows/deposit-form";
 import { AmmSwapForm } from "@/components/flows/amm-swap-form";
 import { BridgeLockForm } from "@/components/flows/bridge-lock-form";
-import { PayrollForm } from "@/components/flows/payroll-form";
+import { PayrollTab } from "@/components/flows/payroll-tab";
 import { ASSET_SYMBOL } from "@/lib/config";
 
 const TABS = ["Deposit", "Pay", "Payroll", "Swap", "Bridge"] as const;
@@ -18,7 +18,7 @@ type Tab = (typeof TABS)[number];
 const FORMS: Record<Tab, React.ComponentType> = {
   Deposit: DepositForm,
   Pay: PayReceive,
-  Payroll: PayrollForm,
+  Payroll: PayrollTab,
   Swap: AmmSwapForm,
   Bridge: BridgeLockForm,
 };

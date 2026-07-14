@@ -43,13 +43,25 @@ amounts. The employee↔email↔salary mapping never touches the chain.
 - [x] Token: public test **USDC** (the same faucet token as Bridge/Swap). Amounts are
       visible on-chain in v1; recipient identities are not.
 
-## Phase 2 — Confidential amounts (eERC)
+## Phase 2 — Confidential amounts + compliance ✅ *done*
 
-- [ ] Fund payroll from the employer's **encrypted xUSD** balance instead of public USDC.
-- [ ] On claim, deliver into the recipient's **encrypted balance** (auto-register on claim),
-      so individual salaries are ciphertext end-to-end — only the employer's total ever
-      hinted at, never the split.
-- [ ] Per-slot amount commitments (`hash(amount, salt)`) revealed only at claim time.
+`ConfidentialPayroll.sol` (Fuji `0xf13e2A0631C9c52124DCaE61103137341729FE03`) — the
+**Confidential** sub-tab on Payroll.
+
+- [x] Per-slot amount **commitments** `keccak256(amount, salt)` — the salary split is never
+      published as a list; only commitments + the funded pool total appear on-chain.
+- [x] Each recipient's `(amount, salt)` lives in their private link; the claim signature binds
+      `(this, chainId, id, slot, to, amount, salt)` — front-run-safe *and* amount-tamper-safe
+      (`BadCommit` / `BadSignature`).
+- [x] **Compliance** — each slot carries an ECIES blob (secp256k1 ECDH → HKDF-SHA256 →
+      XChaCha20-Poly1305) encrypting the amount to a compliance/auditor key. The auditor
+      decrypts the full run in-browser for reporting; the public sees only commitments.
+      `web/lib/compliance.ts`, tested (round-trip, wrong-key + tamper rejection, full-run).
+- [x] Tests: 11 Hardhat (commit/claim/bad-commit/front-run/sweep/pool-accounting) + 7 ECIES
+      + live Fuji UI e2e (fund → auditor decrypt → claim). All green.
+- [ ] *Next:* route the payout itself through the eERC (`privateMint`/`privateTransfer`) so
+      the amount is ciphertext end-to-end — today the USDC transfer still reveals an amount at
+      claim time; commitments hide the pre-claim split and compliance stays auditable.
 
 ## Phase 3 — Delivery & UX
 
