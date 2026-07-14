@@ -21,15 +21,15 @@ export const FUJI = {
 // EncryptedERC: the confidential token. Balances + amounts are ciphertext
 // on-chain; the contract only verifies zk-SNARK proofs.
 export const EERC_ADDRESS = (process.env.NEXT_PUBLIC_EERC_ADDRESS ||
-  "0x320C389607d109B12836D6B8F507C7e87783cf82") as `0x${string}`;
+  "0xe4c10B6Cd5364B79d1136a35c1CD4b4f46f6574A") as `0x${string}`;
 
 // Registrar: BabyJubJub public-key registry (one-time user registration).
 export const REGISTRAR_ADDRESS = (process.env.NEXT_PUBLIC_REGISTRAR ||
-  "0x098561944b2437288Fe98d3F5FA824868899104a") as `0x${string}`;
+  "0xB51479e60CC36810836972BCDEeFFdeec09004Db") as `0x${string}`;
 
 // BabyJubJub elliptic-curve library used by the eERC crypto.
 export const BABYJUBJUB_ADDRESS = (process.env.NEXT_PUBLIC_BABYJUBJUB ||
-  "0x1fc4DEFBD11b8b72c37f8706ACC2b2Eb63262A80") as `0x${string}`;
+  "0xba675F27dF7F59D5e547Ee82F691b903eAC23581") as `0x${string}`;
 
 // Groth16 verifier contracts for each confidential operation.
 export const VERIFIERS = {
