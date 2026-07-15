@@ -54,17 +54,18 @@ export const XAV_ADDRESS = (process.env.NEXT_PUBLIC_XAV ||
   "0x6eC47E4601dA3C6246A0cdc7721a39CF224Df390") as `0x${string}`;
 export const AMM_ADDRESS = (process.env.NEXT_PUBLIC_AMM ||
   "0x1A0236a0Fb5Ef1944F0200D62414A5366b0477E8") as `0x${string}`;
+// XorrBridge — hardened redeploy 2026-07-14 (address(0) guards).
 export const BRIDGE_ADDRESS = (process.env.NEXT_PUBLIC_BRIDGE ||
-  "0x9B30a93976a99df8aD9542eE8931cD78e027f110") as `0x${string}`;
-// PayrollEscrow — claim-link batch payroll (deployed 2026-07-14).
+  "0x7e4499a2CD65821F205B43aF6c4313293D4E95C1") as `0x${string}`;
+// PayrollEscrow — claim-link batch payroll (hardened redeploy: ZeroTo + fee-delta).
 export const PAYROLL_ADDRESS = (process.env.NEXT_PUBLIC_PAYROLL ||
-  "0x02D86e65653B9C962D3b9616C13dD3cF34aF2019") as `0x${string}`;
-// ConfidentialPayroll — hidden-amount payroll + compliance ciphers (v2).
+  "0xb21a4dFb906efad3C51154a462edE2E8201c5c7f") as `0x${string}`;
+// ConfidentialPayroll — hidden-amount payroll + compliance ciphers (hardened redeploy).
 export const CONF_PAYROLL_ADDRESS = (process.env.NEXT_PUBLIC_CONF_PAYROLL ||
-  "0xf13e2A0631C9c52124DCaE61103137341729FE03") as `0x${string}`;
-// ComplianceRegistry — on-chain signed attestation of verified confidential runs.
+  "0xe8f78cE3d4F350809f32bAdA1C0c3878a82020C3") as `0x${string}`;
+// ComplianceRegistry — attestation bound to run's auditor + no overwrite (hardened redeploy).
 export const COMPLIANCE_REGISTRY_ADDRESS = (process.env.NEXT_PUBLIC_COMPLIANCE ||
-  "0x0AdaA34B9C8f43b423EB976fF107CfeB890d2E53") as `0x${string}`;
+  "0x17fC9Fe9fB74a03aE2cab4ad829F80Cc350258e1") as `0x${string}`;
 export const RELAYER_ADDRESS = (process.env.NEXT_PUBLIC_RELAYER ||
   "0x86076053d71E1c95b3c08e68BA39049024D69E67") as `0x${string}`;
 
