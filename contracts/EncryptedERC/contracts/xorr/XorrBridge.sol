@@ -44,6 +44,7 @@ contract XorrBridge {
     }
 
     constructor(IERC20 _token, address _relayer) {
+        if (address(_token) == address(0) || _relayer == address(0)) revert ZeroAmount();
         token = _token;
         relayer = _relayer;
     }
@@ -54,6 +55,7 @@ contract XorrBridge {
     /// @return id the lock nonce, echoed in the `Locked` event for the relayer.
     function lock(uint256 amount, address fujiRecipient) external returns (uint256 id) {
         if (amount == 0) revert ZeroAmount();
+        if (fujiRecipient == address(0)) revert ZeroAmount();
         token.safeTransferFrom(msg.sender, address(this), amount);
         unchecked {
             id = ++nonce;

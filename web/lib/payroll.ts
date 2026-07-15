@@ -284,5 +284,9 @@ export async function signClaimDigest(key: Hex, digest: Hex): Promise<Hex> {
 }
 
 // USDC on this deployment uses 2 decimals (matches ASSET_DECIMALS / the faucet token).
-export const toUsdc = (s: string): bigint => BigInt(Math.round((Number(s) || 0) * 100));
+export const toUsdc = (s: string): bigint => {
+  const n = Number(s);
+  if (!Number.isFinite(n) || n < 0) throw new Error("invalid amount");
+  return BigInt(Math.round(n * 100));
+};
 export const fromUsdc = (v: bigint): string => (Number(v) / 100).toFixed(2);

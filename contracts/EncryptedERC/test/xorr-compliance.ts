@@ -116,6 +116,32 @@ describe("ComplianceRegistry — attest + verify", function () {
     ).to.be.revertedWithCustomError(f.registry, "ZeroAuditor");
   });
 
+  it("reverts WrongAuditor when the signer isn't the run's designated auditor", async () => {
+    const f = await deploy();
+    const { runId, pool } = await fundRun(f); // run's designated auditor = f.auditor.address
+    const impostor = ethers.Wallet.createRandom();
+    const reportHash = ethers.keccak256("0xc0ffee");
+    // a validly-signed attestation, but from a key that is NOT the run's on-chain auditor
+    const digest = await f.registry.attestationDigest(f.payroll.target, runId, reportHash, pool, impostor.address);
+    const sig = await impostor.signMessage(ethers.getBytes(digest));
+    await expect(
+      f.registry.attest(f.payroll.target, runId, reportHash, pool, impostor.address, sig),
+    ).to.be.revertedWithCustomError(f.registry, "WrongAuditor");
+  });
+
+  it("reverts AlreadyAttested on a second attestation for the same run", async () => {
+    const f = await deploy();
+    const { runId, pool } = await fundRun(f);
+    const reportHash = ethers.keccak256("0xfeed");
+    const digest = await f.registry.attestationDigest(f.payroll.target, runId, reportHash, pool, f.auditor.address);
+    const sig = await f.auditor.signMessage(ethers.getBytes(digest));
+    await (await f.registry.attest(f.payroll.target, runId, reportHash, pool, f.auditor.address, sig)).wait();
+    // the (payroll, runId) attestation is now anchored; a second one cannot overwrite it
+    await expect(
+      f.registry.attest(f.payroll.target, runId, reportHash, pool, f.auditor.address, sig),
+    ).to.be.revertedWithCustomError(f.registry, "AlreadyAttested");
+  });
+
   it("FULL FLOW: generate a verified report, attest it, and independently verify", async () => {
     const f = await deploy();
     const { roster, salts, commits, pool, runId } = await fundRun(f);

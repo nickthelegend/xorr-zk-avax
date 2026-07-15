@@ -109,6 +109,14 @@ describe("ConfidentialPayroll — unit + integration", function () {
       expect((await payroll.getRun(0)).disbursed).to.equal(usd(250));
     });
 
+    it("reverts ZeroTo when claiming to the zero address", async () => {
+      const { payroll, key, s, amount } = await oneSlot(usd(100));
+      const sig = await signClaim(payroll, key, 0n, 0n, ZERO, amount, s);
+      await expect(
+        payroll.claim(0, 0, ZERO, amount, s, sig),
+      ).to.be.revertedWithCustomError(payroll, "ZeroTo");
+    });
+
     it("reverts BadCommit if the revealed amount/salt doesn't match", async () => {
       const { payroll, alice, key, s, amount } = await oneSlot(usd(100));
       // sign a lie (200) — but commit is for 100 → BadCommit before sig check

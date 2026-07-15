@@ -61,6 +61,8 @@ contract PayrollEscrow {
     error NotEmployer();
     error NotExpired();
     error NoExpiry();
+    error ZeroTo();
+    error BadTransferAmount();
 
     // ── Views ────────────────────────────────────────────────────────────────
     function payrollCount() external view returns (uint256) {
@@ -124,7 +126,9 @@ contract PayrollEscrow {
             })
         );
 
+        uint256 pre = token.balanceOf(address(this));
         token.safeTransferFrom(msg.sender, address(this), total);
+        if (token.balanceOf(address(this)) - pre != total) revert BadTransferAmount();
         emit PayrollCreated(id, msg.sender, address(token), n, total, expiry);
     }
 
@@ -132,6 +136,7 @@ contract PayrollEscrow {
     /// @notice Collect `slot` of payroll `id` to `to`, proving ownership of the emailed
     /// claim key via `signature` over `claimDigest(id, slot, to)`.
     function claim(uint256 id, uint256 slot, address to, bytes calldata signature) external {
+        if (to == address(0)) revert ZeroTo();
         _requireId(id);
         if (slot >= _slots[id].length) revert BadSlot();
         Slot storage s = _slots[id][slot];

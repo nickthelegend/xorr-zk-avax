@@ -200,6 +200,7 @@ export function reportToJSON(r: ComplianceReport): string {
 /** Parse a published report back into typed form. Throws on malformed input. */
 export function reportFromJSON(s: string): ComplianceReport {
   const o = JSON.parse(s);
+  if (!o || !Array.isArray(o.slots)) throw new Error("malformed report");
   return {
     payroll: o.payroll,
     runId: Number(o.runId),

@@ -180,6 +180,13 @@ describe("PayrollEscrow — unit tests", function () {
       ).to.be.revertedWithCustomError(payroll, "AlreadyClaimed");
     });
 
+    it("reverts ZeroTo when claiming to the zero address", async () => {
+      const { payroll, usdc } = await deploy();
+      const [k] = claimKeys();
+      await (await payroll.createPayroll(usdc.target, [k.address], [units(100)], 0)).wait();
+      await expect(payroll.claim(0, 0, ZERO, "0x")).to.be.revertedWithCustomError(payroll, "ZeroTo");
+    });
+
     it("reverts BadId / BadSlot for out-of-range indices", async () => {
       const { payroll, usdc, alice } = await deploy();
       const [k] = claimKeys();

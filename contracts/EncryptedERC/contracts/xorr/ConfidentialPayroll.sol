@@ -68,6 +68,8 @@ contract ConfidentialPayroll {
     error NoExpiry();
     error NotExpired();
     error NothingToSweep();
+    error ZeroTo();
+    error BadTransferAmount();
 
     // ── Views ────────────────────────────────────────────────────────────────
     function runCount() external view returns (uint256) {
@@ -140,8 +142,16 @@ contract ConfidentialPayroll {
         );
         _store(id, claimAddrs, commits, auditorCiphers_);
 
-        token.safeTransferFrom(msg.sender, address(this), pool);
+        _pull(token, pool);
         emit RunCreated(id, msg.sender, address(token), n, pool, auditor, expiry);
+    }
+
+    /// Pull `amount` from the caller and verify the received balance delta exactly matches
+    /// (rejects fee-on-transfer/deflationary tokens). Kept separate to bound stack depth.
+    function _pull(IERC20 token, uint128 amount) private {
+        uint256 pre = token.balanceOf(address(this));
+        token.safeTransferFrom(msg.sender, address(this), amount);
+        if (token.balanceOf(address(this)) - pre != amount) revert BadTransferAmount();
     }
 
     /// Store slots + compliance ciphers for a run (kept separate to bound stack depth).
@@ -164,6 +174,7 @@ contract ConfidentialPayroll {
     function claim(uint256 id, uint256 slot, address to, uint128 amount, bytes32 salt, bytes calldata signature)
         external
     {
+        if (to == address(0)) revert ZeroTo();
         _requireId(id);
         if (slot >= _slots[id].length) revert BadSlot();
         Slot storage s = _slots[id][slot];
@@ -174,9 +185,8 @@ contract ConfidentialPayroll {
         if (ECDSA.recover(digest, signature) != s.claimAddr) revert BadSignature();
 
         Run storage r = _runs[id];
-        uint128 disbursed = r.disbursed + amount;
-        if (disbursed > r.pool) revert PoolExceeded();
-        r.disbursed = disbursed;
+        if (amount > r.pool - r.disbursed) revert PoolExceeded();
+        r.disbursed += amount;
         s.claimed = true;
 
         r.token.safeTransfer(to, amount);

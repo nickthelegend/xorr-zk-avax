@@ -4,6 +4,23 @@ pragma solidity 0.8.27;
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
+/// @notice Minimal view into ConfidentialPayroll — the registry couples to its `getRun` ABI
+/// so it can bind an attestation to the run's designated auditor.
+interface IConfPayrollAuditor {
+    function getRun(uint256)
+        external
+        view
+        returns (
+            address employer,
+            address token,
+            uint64 createdAt,
+            uint64 expiry,
+            uint128 pool,
+            uint128 disbursed,
+            address auditor
+        );
+}
+
 /// @title ComplianceRegistry — on-chain anchor for verified confidential-payroll audits.
 /// @notice A compliance officer reviews a ConfidentialPayroll run: they decrypt every slot's
 /// amount and check it against the on-chain `keccak256(amount, salt)` commitment (so the
@@ -35,6 +52,8 @@ contract ComplianceRegistry {
 
     error ZeroAuditor();
     error BadSignature();
+    error AlreadyAttested();
+    error WrongAuditor();
 
     /// @notice The digest an auditor signs (EIP-191) to attest a run's report.
     function attestationDigest(
@@ -59,6 +78,9 @@ contract ComplianceRegistry {
         bytes calldata signature
     ) external {
         if (auditor == address(0)) revert ZeroAuditor();
+        if (_att[payroll][runId].timestamp != 0) revert AlreadyAttested();
+        (, , , , , , address designated) = IConfPayrollAuditor(payroll).getRun(runId);
+        if (auditor != designated) revert WrongAuditor();
         bytes32 digest = MessageHashUtils.toEthSignedMessageHash(
             attestationDigest(payroll, runId, reportHash, verifiedTotal, auditor)
         );
